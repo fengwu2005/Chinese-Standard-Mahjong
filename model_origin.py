@@ -6,13 +6,11 @@ class CNNModel(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
         self._tower = nn.Sequential(
-            nn.Conv2d(143, 128, 3, 1, 1, bias = False),
+            nn.Conv2d(6, 64, 3, 1, 1, bias = False),
             nn.ReLU(True),
-            nn.Conv2d(128, 64, 3, 1, 1, bias = False),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 64, 3, 1, 1, bias = False),
             nn.ReLU(True),
             nn.Conv2d(64, 32, 3, 1, 1, bias = False),
-            nn.BatchNorm2d(32),
             nn.ReLU(True),
             nn.Flatten()
         )
