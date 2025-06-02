@@ -1,4 +1,4 @@
-from dataset import MahjongGBDataset
+from pre_dataset import MahjongGBDataset
 from torch.utils.data import DataLoader
 from model import CNNModel
 import torch.nn.functional as F
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         for i, d in enumerate(vloader):
             input_dict = {'is_training': False, 'obs': {'observation': d[0].cuda(), 'action_mask': d[1].cuda()}}
             with torch.no_grad():
-                logits = model(input_dict)
+                logits, _ = model(input_dict)
                 pred = logits.argmax(dim = 1)
                 correct += torch.eq(pred, d[2].cuda()).sum().item()
         acc = correct / len(validateDataset)
