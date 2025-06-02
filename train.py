@@ -21,7 +21,7 @@ if __name__ == '__main__':
         'entropy_coeff': 0.01,
         'device': 'cuda',
         'ckpt_save_interval': 300,
-        'ckpt_save_path': '/model/'
+        'ckpt_save_path': './model/'
     }
     
     replay_buffer = ReplayBuffer(config['replay_buffer_size'], config['replay_buffer_episode'])
