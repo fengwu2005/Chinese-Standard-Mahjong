@@ -36,7 +36,6 @@ def saveData():
 
 with open('data/data.txt', encoding='UTF-8') as f:
     line = f.readline()
-    cnt = 0
     while line:
         t = line.split()
         if len(t) == 0:
@@ -135,9 +134,6 @@ with open('data/data.txt', encoding='UTF-8') as f:
         elif t[0] == 'Score':
             filterData()
             saveData()
-            cnt = cnt + 1
-            if cnt >= 256:
-                break
         line = f.readline()
 with open('data/count.json', 'w') as f:
     json.dump(l, f)
