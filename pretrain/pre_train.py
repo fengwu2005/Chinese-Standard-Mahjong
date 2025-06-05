@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('--logdir', type=str, default='model/', help='Directory to save the model checkpoints')
     parser.add_argument('--batch_size', type=int, default=1024, help='Batch size for training')
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train the model')
-    parser.add_argument('--save_interval', type=int, default=10, help='Interval to save the model checkpoints')
+    parser.add_argument('--save_interval', type=int, default=20, help='Interval to save the model checkpoints')
     parser.add_argument('--splitratio', type=float, default=0.9, help='Split ratio for training and validation datasets')
     parser.add_argument('--timestamp', type=str, default=None, help='Number of timesteps to consider in the dataset')
     parser.add_argument('--data', type=str, default='pretrain/data', help='Path to the Mahjong GB data file')
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         epoch_loss = 0
         
         # t3 = time.time()
-        for d in tqdm(loader, desc=f'epoch{e}', unit='batch'):
+        for d in tqdm(loader, desc=f'Epoch {e}', unit='batch'):
             # t1 = time.time()
             # data_load_time = t1 - t3
             # print('Data load time:', data_load_time)
@@ -92,5 +92,5 @@ if __name__ == '__main__':
         if (e + 1) % args.save_interval == 0:
             logdir = args.logdir
             os.makedirs(logdir, exist_ok=True)
-            torch.save(model.state_dict(), os.path.join(logdir, f'{e}.pkl'))
-            print('Saving model to', logdir + '%d.pkl' % e)
+            torch.save(model.state_dict(), os.path.join(logdir, f'{e+1}.pkl'))
+            print('Saving model to', os.path.join(logdir, f'{e+1}.pkl'))
