@@ -54,14 +54,11 @@ if __name__ == '__main__':
         model.train()
         epoch_loss = 0
         
-            # Save the model state_dict
-        t3 = time.time()
+        # t3 = time.time()
         for d in tqdm(loader, desc=f'epoch{e}', unit='batch'):
-            # 取数据
-            # DataLoader 已经自动取数据到 d
-            t1 = time.time()
-            data_load_time = t1 - t3
-            print('Data load time:', data_load_time)
+            # t1 = time.time()
+            # data_load_time = t1 - t3
+            # print('Data load time:', data_load_time)
 
             #input_dict = {'is_training': True, 'obs': {'observation': d[0].cuda(), 'action_mask': d[1].cuda()}}
             input_dict = {'observation': d[0].cuda(), 'action_mask': d[1].cuda()}
@@ -73,9 +70,9 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            t3 = time.time()
-            compute_time = t3 - t1
-            print('Compute time:', compute_time)
+            # t3 = time.time()
+            # compute_time = t3 - t1
+            # print('Compute time:', compute_time)
         avg_loss = epoch_loss / len(loader)
         writer.add_scalar('Loss/Train', avg_loss, e + 1)
 
@@ -92,8 +89,8 @@ if __name__ == '__main__':
         writer.add_scalar('Accuracy/Validate', acc, e + 1)
         print('Epoch', e + 1, 'Validate acc:', acc)
 
-        if (e+1) % args.save_interval == 0:
+        if (e + 1) % args.save_interval == 0:
             logdir = args.logdir
             os.makedirs(logdir, exist_ok=True)
-            torch.save(model.state_dict(), logdir + '%d.pkl' % e)
+            torch.save(model.state_dict(), os.path.join(logdir, f'{e}.pkl'))
             print('Saving model to', logdir + '%d.pkl' % e)

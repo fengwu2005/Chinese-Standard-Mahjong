@@ -140,8 +140,8 @@ if __name__ == '__main__':
             elif t[0] == 'Score':
                 filterData()
                 saveData(args)
-                # if matchid > 60000:
-                #     break
+                if matchid > 60000:
+                    break
             line = f.readline()
     with open(os.path.join(args.data, "count.json"), 'w') as f:
         json.dump(l, f)

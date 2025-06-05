@@ -67,7 +67,6 @@ class MahjongGBDataset_Allload(Dataset):
         self.samples = sum(match_samples)
         self.augment = augment
 
-        # 一次性加载所有数据
         obs_list, mask_list, act_list = [], [], []
         for i in range(self.matches):
             d = np.load(os.path.join(self.data_path, f'{i + self.begin}.npz'))
