@@ -1,11 +1,13 @@
 from torch.utils.data import Dataset
 import numpy as np
 from bisect import bisect_right
+import os
 
+import json
 class MahjongGBDataset(Dataset):
     
     def __init__(self, begin = 0, end = 1, augment = False, args = None):
-        import json
+        
         if args is not None:
             self.args = args
             self.data_path = args.data
@@ -47,3 +49,37 @@ class MahjongGBDataset(Dataset):
         d = np.load(f'{self.data_path}/%d.npz' % (match_id + self.begin))
         # print(d['obs'][0][sample_id])
         return d['obs'][sample_id], d['mask'][sample_id], d['act'][sample_id]
+    
+class MahjongGBDataset_Allload(Dataset):
+    def __init__(self, begin=0, end=1, augment=False, args=None):
+        if args is not None:
+            self.args = args
+            self.data_path = args.data
+        else:
+            self.data_path = 'pretrain/data'
+        with open(os.path.join(self.data_path, 'count.json')) as f:
+            match_samples = json.load(f)
+        self.total_matches = len(match_samples)
+        self.begin = int(begin * self.total_matches)
+        self.end = int(end * self.total_matches)
+        match_samples = match_samples[self.begin : self.end]
+        self.matches = len(match_samples)
+        self.samples = sum(match_samples)
+        self.augment = augment
+
+        # 一次性加载所有数据
+        obs_list, mask_list, act_list = [], [], []
+        for i in range(self.matches):
+            d = np.load(os.path.join(self.data_path, f'{i + self.begin}.npz'))
+            obs_list.append(d['obs'])
+            mask_list.append(d['mask'])
+            act_list.append(d['act'])
+        self.obs = np.concatenate(obs_list, axis=0)
+        self.mask = np.concatenate(mask_list, axis=0)
+        self.act = np.concatenate(act_list, axis=0)
+
+    def __len__(self):
+        return len(self.obs)
+
+    def __getitem__(self, index):
+        return self.obs[index], self.mask[index], self.act[index]

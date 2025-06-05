@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from pre_dataset import MahjongGBDataset
+from pre_dataset import MahjongGBDataset, MahjongGBDataset_Allload
 from torch.utils.data import DataLoader
 from model import CNNModel
 import torch.nn.functional as F
@@ -21,8 +21,10 @@ if __name__ == '__main__':
     parser.add_argument('--data', type=str, default='pretrain/data', help='Path to the Mahjong GB data file')
     args = parser.parse_args()
 
-    trainDataset = MahjongGBDataset(0, args.splitratio, True, args)
-    validateDataset = MahjongGBDataset(args.splitratio, 1, False, args)
+    # trainDataset = MahjongGBDataset(0, args.splitratio, True, args)
+    # validateDataset = MahjongGBDataset(args.splitratio, 1, False, args)
+    trainDataset = MahjongGBDataset_Allload(0, args.splitratio, True, args)
+    validateDataset = MahjongGBDataset_Allload(args.splitratio, 1, False, args)
     loader = DataLoader(dataset = trainDataset, batch_size = args.batch_size, shuffle = True)
     vloader = DataLoader(dataset = validateDataset, batch_size = args.batch_size, shuffle = False)
     model = CNNModel().to('cuda')
