@@ -4,9 +4,14 @@ from bisect import bisect_right
 
 class MahjongGBDataset(Dataset):
     
-    def __init__(self, begin = 0, end = 1, augment = False):
+    def __init__(self, begin = 0, end = 1, augment = False, args = None):
         import json
-        with open('data/count.json') as f:
+        if args is not None:
+            self.args = args
+            self.data_path = args.data
+        else:
+            self.data_path = 'pretrain/data'
+        with open(f'{self.data_path}/count.json') as f:
             self.match_samples = json.load(f)
         self.total_matches = len(self.match_samples)
         # print(self.total_matches)
@@ -39,6 +44,6 @@ class MahjongGBDataset(Dataset):
         sample_id = index - self.match_samples[match_id]
         # return self.cache['obs'][match_id][sample_id], self.cache['mask'][match_id][sample_id], self.cache['act'][match_id][sample_id]
         # print(index, match_id, sample_id)
-        d = np.load('data/%d.npz' % (match_id + self.begin))
+        d = np.load(f'{self.data_path}/%d.npz' % (match_id + self.begin))
         # print(d['obs'][0][sample_id])
         return d['obs'][sample_id], d['mask'][sample_id], d['act'][sample_id]

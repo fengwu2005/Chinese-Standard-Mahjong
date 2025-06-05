@@ -2,3 +2,4 @@ PyMahjongGB
 numpy
 torch
 tqdm
+tensorboard
