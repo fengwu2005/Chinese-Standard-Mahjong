@@ -3,8 +3,8 @@
 ```bash
 conda create -n mahjong python=3.10 -y
 conda activate mahjong
-
-pip install PyMahjongGB numpy torch
+# get your version of torch ready first
+pip install -r requirements.txt
 ```
 
 model_origin.py origin model code

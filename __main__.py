@@ -1,5 +1,5 @@
 # Agent part
-from feature import FeatureAgent
+from env.feature import FeatureAgent
 
 # Model part
 from model import CNNModel

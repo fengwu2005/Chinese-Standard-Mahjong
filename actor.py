@@ -5,7 +5,7 @@ import torch
 from replay_buffer import ReplayBuffer
 from model_pool import ModelPoolClient
 from env import MahjongGBEnv
-from feature import FeatureAgent
+from env.feature import FeatureAgent
 from model import CNNModel
 
 class Actor(Process):
