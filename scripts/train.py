@@ -1,6 +1,9 @@
-from replay_buffer import ReplayBuffer
-from actor import Actor
-from learner import Learner
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from scripts.replay_buffer import ReplayBuffer
+from scripts.actor import Actor
+from scripts.learner import Learner
 
 if __name__ == '__main__':
     config = {

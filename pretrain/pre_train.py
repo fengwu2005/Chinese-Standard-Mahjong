@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from pre_dataset import MahjongGBDataset, MahjongGBDataset_Allload
 from torch.utils.data import DataLoader
-from model import CNNModel
+from scripts.model import CNNModel
 import torch.nn.functional as F
 import torch
 import argparse
@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 import time
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pre-train the model')
-    parser.add_argument('--logdir', type=str, default='model/', help='Directory to save the model checkpoints')
+    parser.add_argument('--logdir', type=str, default='ckpt/', help='Directory to save the model checkpoints')
     parser.add_argument('--batch_size', type=int, default=1024, help='Batch size for training')
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train the model')
     parser.add_argument('--save_interval', type=int, default=20, help='Interval to save the model checkpoints')

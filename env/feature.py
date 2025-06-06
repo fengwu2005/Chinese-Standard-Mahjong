@@ -1,4 +1,4 @@
-from agent import MahjongGBAgent
+from scripts.agent import MahjongGBAgent
 from collections import defaultdict
 import numpy as np
 

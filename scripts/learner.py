@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from replay_buffer import ReplayBuffer
-from model_pool import ModelPoolServer
+from scripts.replay_buffer import ReplayBuffer
+from scripts.model_pool import ModelPoolServer
 from model import CNNModel
 
 class Learner(Process):

@@ -2,7 +2,7 @@
 from env.feature import FeatureAgent
 
 # Model part
-from model import CNNModel
+from scripts.model import CNNModel
 
 # Botzone interaction
 import numpy as np

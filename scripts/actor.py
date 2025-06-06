@@ -1,10 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from multiprocessing import Process
 import numpy as np
 import torch
 
-from replay_buffer import ReplayBuffer
-from model_pool import ModelPoolClient
-from env import MahjongGBEnv
+from scripts.replay_buffer import ReplayBuffer
+from scripts.model_pool import ModelPoolClient
+from env.env import MahjongGBEnv
 from env.feature import FeatureAgent
 from model import CNNModel
 

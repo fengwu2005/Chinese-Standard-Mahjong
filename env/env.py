@@ -1,4 +1,4 @@
-from agent import MahjongGBAgent
+from scripts.agent import MahjongGBAgent
 
 import random
 from collections import defaultdict
