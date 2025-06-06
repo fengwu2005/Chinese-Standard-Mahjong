@@ -15,12 +15,13 @@ class Learner(Process):
         super(Learner, self).__init__()
         self.replay_buffer = replay_buffer
         self.config = config
+        
     
     def run(self):
-        # create model pool
-        writer = SummaryWriter(log_dir=self.config["ckpt_save_path"])
+
+        writer = self.config['writer']
         model_pool = ModelPoolServer(self.config['model_pool_size'], self.config['model_pool_name'])
-        
+        iterations = 0
         # initialize model params
         device = torch.device(self.config['device'])
         model = CNNModel()
@@ -30,6 +31,7 @@ class Learner(Process):
                 max_epoch = max([int(f.split('.')[0]) for f in model_files if f.split('.')[0].isdigit()])
                 model_path = os.path.join(self.config['pretrain_ckpt_path'], f"{max_epoch}.pkl")
                 model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+                iterations = max_epoch + 1
                 print(f"Loaded pre-trained model from {model_path}")
             else:
                 raise FileNotFoundError("No pre-trained model found in the specified path.")
@@ -44,8 +46,7 @@ class Learner(Process):
         while self.replay_buffer.size() < self.config['min_sample']:
             time.sleep(0.1)
         
-        cur_time = time.time()
-        iterations = 0
+ 
         while True:
             total_loss = 0
             total_policy_loss = 0
@@ -105,9 +106,7 @@ class Learner(Process):
             model = model.to(device)
             
             # save checkpoints
-            t = time.time()
-            if t - cur_time > self.config['ckpt_save_interval']:
+            if iterations % self.config["ckpt_save_interval"] == 0:
                 path = os.path.join(self.config['ckpt_save_path'], '%d.pt' % iterations)
                 torch.save(model.state_dict(), path)
-                cur_time = t
             iterations += 1

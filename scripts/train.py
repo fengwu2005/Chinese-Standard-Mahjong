@@ -24,13 +24,17 @@ if __name__ == '__main__':
         'value_coeff': 1,
         'entropy_coeff': 0.01,
         'device': 'cuda',
-        'ckpt_save_interval': 300,
+        'ckpt_save_interval': 2000,  # iter
         'ckpt_save_path': './models/',
         'pretrain_ckpt_path': 'pretrain/ckpt/20250606-140823',
     }
+    
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     config["ckpt_save_path"] = os.path.join(config["ckpt_save_path"], timestamp)
     os.makedirs(config["ckpt_save_path"], exist_ok=True)
+    writer = SummaryWriter(log_dir=config["ckpt_save_path"])
+    config['writer'] = writer
+    
     replay_buffer = ReplayBuffer(config['replay_buffer_size'], config['replay_buffer_episode'])
     
     actors = []
