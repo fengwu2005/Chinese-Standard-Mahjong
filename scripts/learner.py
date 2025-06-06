@@ -7,7 +7,8 @@ from torch.nn import functional as F
 from scripts.replay_buffer import ReplayBuffer
 from scripts.model_pool import ModelPoolServer
 from model import CNNModel
-
+import os
+from torch.utils.tensorboard import SummaryWriter
 class Learner(Process):
     
     def __init__(self, config, replay_buffer):
@@ -17,12 +18,21 @@ class Learner(Process):
     
     def run(self):
         # create model pool
+        writer = SummaryWriter(log_dir=self.config["ckpt_save_path"])
         model_pool = ModelPoolServer(self.config['model_pool_size'], self.config['model_pool_name'])
         
         # initialize model params
         device = torch.device(self.config['device'])
         model = CNNModel()
-        
+        if self.config['pretrain_ckpt_path']:
+            model_files = [f for f in os.listdir(self.config['pretrain_ckpt_path']) if f.endswith('.pkl')]
+            if model_files:
+                max_epoch = max([int(f.split('.')[0]) for f in model_files if f.split('.')[0].isdigit()])
+                model_path = os.path.join(self.config['pretrain_ckpt_path'], f"{max_epoch}.pkl")
+                model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+                print(f"Loaded pre-trained model from {model_path}")
+            else:
+                raise FileNotFoundError("No pre-trained model found in the specified path.")
         # send to model pool
         model_pool.push(model.state_dict()) # push cpu-only tensor to model_pool
         model = model.to(device)
@@ -37,6 +47,10 @@ class Learner(Process):
         cur_time = time.time()
         iterations = 0
         while True:
+            total_loss = 0
+            total_policy_loss = 0
+            total_value_loss = 0
+            total_entropy_loss = 0
             # sample batch
             batch = self.replay_buffer.sample(self.config['batch_size'])
             obs = torch.tensor(batch['state']['observation']).to(device)
@@ -49,7 +63,7 @@ class Learner(Process):
             advs = torch.tensor(batch['adv']).to(device)
             targets = torch.tensor(batch['target']).to(device)
             
-            print('Iteration %d, replay buffer in %d out %d' % (iterations, self.replay_buffer.stats['sample_in'], self.replay_buffer.stats['sample_out']))
+            
             
             # calculate PPO loss
             model.train(True) # Batch Norm training mode
@@ -72,6 +86,19 @@ class Learner(Process):
                 loss.backward()
                 optimizer.step()
 
+                total_loss += loss.item()
+                total_policy_loss += policy_loss.item()
+                total_value_loss += value_loss.item()
+                total_entropy_loss += entropy_loss.item()
+
+            writer.add_scalar('Loss/total', total_loss / self.config['epochs'], iterations)
+            writer.add_scalar('Loss/policy', total_policy_loss / self.config['epochs'], iterations)
+            writer.add_scalar('Loss/value', total_value_loss / self.config['epochs'], iterations)
+            writer.add_scalar('Loss/entropy', total_entropy_loss / self.config['epochs'], iterations)
+            #print('Iteration %d, replay buffer in %d out %d' % (iterations, self.replay_buffer.stats['sample_in'], self.replay_buffer.stats['sample_out']))
+            print('Iteration %d, total loss %.4f, policy loss %.4f, value loss %.4f, entropy loss %.4f' % (
+                iterations, total_loss / self.config['epochs'], total_policy_loss / self.config['epochs'],
+                total_value_loss / self.config['epochs'], total_entropy_loss / self.config['epochs']))
             # push new model
             model = model.to('cpu')
             model_pool.push(model.state_dict()) # push cpu-only tensor to model_pool
@@ -80,7 +107,7 @@ class Learner(Process):
             # save checkpoints
             t = time.time()
             if t - cur_time > self.config['ckpt_save_interval']:
-                path = self.config['ckpt_save_path'] + 'model_%d.pt' % iterations
+                path = os.path.join(self.config['ckpt_save_path'], '%d.pt' % iterations)
                 torch.save(model.state_dict(), path)
                 cur_time = t
             iterations += 1
