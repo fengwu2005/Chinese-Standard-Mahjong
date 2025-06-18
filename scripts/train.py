@@ -27,6 +27,9 @@ if __name__ == '__main__':
         'ckpt_save_interval': 2000,  # iter
         'ckpt_save_path': './models/',
         'pretrain_ckpt_path': 'pretrain/ckpt/20250606-140823',
+        #evaluate
+        'eval_episodes': 20,
+        'eval_interval': 1000,  # iter
     }
     
     timestamp = time.strftime("%Y%m%d-%H%M%S")

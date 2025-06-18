@@ -37,20 +37,23 @@ class ResidualBlock(nn.Module):
 class CNNModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self._tower = nn.Sequential(
+        tower_layers = [
             nn.Conv2d(143, 256, 3, 1, 1, bias=False),
             nn.BatchNorm2d(256),
             nn.ReLU(True),
-            
-            ResidualBlock(256, 256),
-            ResidualBlock(256, 256),
+        ]
+        num_res_blocks = 8 
+        for _ in range(num_res_blocks):
+            tower_layers.append(ResidualBlock(256, 256))
+
+        tower_layers += [
             ResidualBlock(256, 128),
             ResidualBlock(128, 128),
             ResidualBlock(128, 64),
             ResidualBlock(64, 32),
-            
             nn.Flatten()
-        )
+        ]
+        self._tower = nn.Sequential(*tower_layers)
 
         # 保持与原版相同的输出维度
         self._logits = nn.Sequential(

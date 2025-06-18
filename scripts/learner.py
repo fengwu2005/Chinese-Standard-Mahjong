@@ -9,12 +9,14 @@ from scripts.model_pool import ModelPoolServer
 from model import CNNModel
 import os
 from torch.utils.tensorboard import SummaryWriter
+from evaluator import Evaluator
 class Learner(Process):
     
     def __init__(self, config, replay_buffer):
         super(Learner, self).__init__()
         self.replay_buffer = replay_buffer
         self.config = config
+        self.evaluator = Evaluator(self.config)
         
     
     def run(self):
@@ -109,4 +111,11 @@ class Learner(Process):
             if iterations % self.config["ckpt_save_interval"] == 0:
                 path = os.path.join(self.config['ckpt_save_path'], '%d.pt' % iterations)
                 torch.save(model.state_dict(), path)
+
+            if iterations % self.config["evaluate_interval"] == 0 and self.config.get('baseline_ckpt', None) is not None:
+                self.evaluator.update_model(model_ckpt=os.path.join(self.config['ckpt_save_path'], '%d.pt' % iterations),)
+                avg_model, avg_baseline = self.evaluator.evaluate()
+                print(f'[Learner] Iteration {iterations}: Model avg: {avg_model:.2f} | Baseline avg: {avg_baseline:.2f}')
+                writer.add_scalar('eval/model_avg', avg_model, iterations)
+                writer.add_scalar('eval/baseline_avg', avg_baseline, iterations)
             iterations += 1
