@@ -10,17 +10,24 @@ from model import CNNModel
 import os
 from torch.utils.tensorboard import SummaryWriter
 from evaluator import Evaluator
+import wandb
 class Learner(Process):
     
     def __init__(self, config, replay_buffer):
         super(Learner, self).__init__()
         self.replay_buffer = replay_buffer
         self.config = config
-        self.evaluator = Evaluator(self.config)
+        #self.evaluator = Evaluator(self.config)
+        self.evaluator = None
         
     
     def run(self):
-
+        wandb.init(
+            project="mahjong-rl",
+            group="experiment",  # 多进程用同一个 group
+            name=f"learner_{os.getpid()}",
+            dir=self.config["ckpt_save_path"],
+        )
         writer = self.config['writer']
         model_pool = ModelPoolServer(self.config['model_pool_size'], self.config['model_pool_name'])
         iterations = 0
@@ -94,12 +101,18 @@ class Learner(Process):
                 total_value_loss += value_loss.item()
                 total_entropy_loss += entropy_loss.item()
 
-            writer.add_scalar('Loss/total', total_loss / self.config['epochs'], iterations)
-            writer.add_scalar('Loss/policy', total_policy_loss / self.config['epochs'], iterations)
-            writer.add_scalar('Loss/value', total_value_loss / self.config['epochs'], iterations)
-            writer.add_scalar('Loss/entropy', total_entropy_loss / self.config['epochs'], iterations)
+            # writer.add_scalar('Loss/total', total_loss / self.config['epochs'], iterations)
+            # writer.add_scalar('Loss/policy', total_policy_loss / self.config['epochs'], iterations)
+            # writer.add_scalar('Loss/value', total_value_loss / self.config['epochs'], iterations)
+            # writer.add_scalar('Loss/entropy', total_entropy_loss / self.config['epochs'], iterations)
+            wandb.log({
+                "Loss/total": total_loss / self.config['epochs'],
+                "Loss/policy": total_policy_loss / self.config['epochs'],
+                "Loss/value": total_value_loss / self.config['epochs'],
+                "Loss/entropy": total_entropy_loss / self.config['epochs'],
+            })
             #print('Iteration %d, replay buffer in %d out %d' % (iterations, self.replay_buffer.stats['sample_in'], self.replay_buffer.stats['sample_out']))
-            print('Iteration %d, total loss %.4f, policy loss %.4f, value loss %.4f, entropy loss %.4f' % (
+            print('[Train] Iteration %d, total loss %.4f, policy loss %.4f, value loss %.4f, entropy loss %.4f' % (
                 iterations, total_loss / self.config['epochs'], total_policy_loss / self.config['epochs'],
                 total_value_loss / self.config['epochs'], total_entropy_loss / self.config['epochs']))
             # push new model
@@ -112,10 +125,17 @@ class Learner(Process):
                 path = os.path.join(self.config['ckpt_save_path'], '%d.pt' % iterations)
                 torch.save(model.state_dict(), path)
 
-            if iterations % self.config["evaluate_interval"] == 0 and self.config.get('baseline_ckpt', None) is not None:
+            if iterations % self.config["eval_interval"] == 0 and self.config.get('baseline_ckpt', None) is not None:
+                if self.evaluator is None:
+                    self.evaluator = Evaluator(self.config, None, self.config['baseline_ckpt'])
+
                 self.evaluator.update_model(model_ckpt=os.path.join(self.config['ckpt_save_path'], '%d.pt' % iterations),)
                 avg_model, avg_baseline = self.evaluator.evaluate()
-                print(f'[Learner] Iteration {iterations}: Model avg: {avg_model:.2f} | Baseline avg: {avg_baseline:.2f}')
-                writer.add_scalar('eval/model_avg', avg_model, iterations)
-                writer.add_scalar('eval/baseline_avg', avg_baseline, iterations)
+                print(f'[Evaluate] Iteration {iterations}: Model avg: {avg_model:.2f} | Baseline avg: {avg_baseline:.2f}')
+                # writer.add_scalar('eval/model_avg', avg_model, iterations)
+                # writer.add_scalar('eval/baseline_avg', avg_baseline, iterations)
+                wandb.log({
+                    "eval/reward_model": avg_model,
+                    "eval/reward_baseline": avg_baseline,
+                })
             iterations += 1

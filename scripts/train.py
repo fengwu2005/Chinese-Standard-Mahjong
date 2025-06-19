@@ -1,3 +1,5 @@
+import multiprocessing as mp
+# mp.set_start_method('spawn', force=True)
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -24,12 +26,13 @@ if __name__ == '__main__':
         'value_coeff': 1,
         'entropy_coeff': 0.01,
         'device': 'cuda',
-        'ckpt_save_interval': 2000,  # iter
+        'ckpt_save_interval': 500,  # iter
         'ckpt_save_path': './models/',
-        'pretrain_ckpt_path': 'pretrain/ckpt/20250606-140823',
+        'pretrain_ckpt_path': 'ckpt/20250618-161412/',
         #evaluate
         'eval_episodes': 20,
-        'eval_interval': 1000,  # iter
+        'eval_interval': 500,  # iter
+        'baseline_ckpt': 'ckpt/20250618-161412/20.pkl',
     }
     
     timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -47,8 +50,14 @@ if __name__ == '__main__':
         actors.append(actor)
     learner = Learner(config, replay_buffer)
     
-    for actor in actors: actor.start()
-    learner.start()
-    
-    for actor in actors: actor.join()
-    learner.terminate()
+    try:
+        for actor in actors: actor.start()
+        learner.start()
+        for actor in actors: actor.join()
+        learner.terminate()
+    except KeyboardInterrupt:
+        print("Exiting gracefully...")
+        for actor in actors: actor.terminate()
+        #learner.terminate()
+    finally:
+        writer.close()

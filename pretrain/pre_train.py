@@ -14,8 +14,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pre-train the model')
     parser.add_argument('--logdir', type=str, default='ckpt/', help='Directory to save the model checkpoints')
     parser.add_argument('--batch_size', type=int, default=1024, help='Batch size for training')
-    parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train the model')
-    parser.add_argument('--save_interval', type=int, default=20, help='Interval to save the model checkpoints')
+    parser.add_argument('--epochs', type=int, default=11, help='Number of epochs to train the model')
+    parser.add_argument('--save_interval', type=int, default=10, help='Interval to save the model checkpoints')
     parser.add_argument('--splitratio', type=float, default=0.9, help='Split ratio for training and validation datasets')
     parser.add_argument('--timestamp', type=str, default=None, help='Number of timesteps to consider in the dataset')
     parser.add_argument('--data', type=str, default='pretrain/data', help='Path to the Mahjong GB data file')
@@ -50,12 +50,12 @@ if __name__ == '__main__':
         
         
     # Train and validate
-    for e in tqdm(range(args.epochs), desc='Training', unit='epoch'):
+    for e in range(args.epochs):
         model.train()
         epoch_loss = 0
         
         # t3 = time.time()
-        for d in tqdm(loader, desc=f'Epoch {e}', unit='batch'):
+        for d in tqdm(loader, desc=f'Epoch {e+1}', unit='batch'):
             # t1 = time.time()
             # data_load_time = t1 - t3
             # print('Data load time:', data_load_time)
