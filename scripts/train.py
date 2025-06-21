@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from scripts.replay_buffer import ReplayBuffer
-from scripts.actor import Actor
+from scripts.actor_new import Actor
 from scripts.learner import Learner
 import time
 from torch.utils.tensorboard import SummaryWriter
@@ -15,23 +15,23 @@ if __name__ == '__main__':
         'model_pool_size': 20,
         'model_pool_name': 'model-pool',
         'num_actors': 8,
-        'episodes_per_actor': 1000,
+        'episodes_per_actor': 100000,
         'gamma': 0.98,
         'lambda': 0.95,
         'min_sample': 200,
         'batch_size': 256,
         'epochs': 5,
         'clip': 0.2,
-        'lr': 1e-4,
+        'lr': 5e-5,
         'value_coeff': 1,
-        'entropy_coeff': 0.01,
+        'entropy_coeff': 0.1,
         'device': 'cuda',
-        'ckpt_save_interval': 500,  # iter
+        'ckpt_save_interval': 300,  # iter
         'ckpt_save_path': './models/',
         'pretrain_ckpt_path': 'ckpt/20250618-161412/',
         #evaluate
-        'eval_episodes': 20,
-        'eval_interval': 500,  # iter
+        'eval_episodes': 40,
+        'eval_interval': 300,  # iter
         'baseline_ckpt': 'ckpt/20250618-161412/20.pkl',
     }
     
