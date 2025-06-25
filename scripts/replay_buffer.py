@@ -6,34 +6,61 @@ import random
 class ReplayBuffer:
 
     def __init__(self, capacity, episode):
-        self.queue = Queue(episode)
+        self.queue_win = Queue(episode)
+        self.queue_lose = Queue(episode)
         self.capacity = capacity
         self.buffer = None
     
-    def push(self, samples): # only called by actors
-        self.queue.put(samples)
+    def push_win(self, samples): # only called by actors
+        self.queue_win.put(samples)
+    def push_lose(self, samples): # only called by actors
+        self.queue_lose.put(samples)
     
     def _flush(self):
-        if self.buffer is None: # called first time by learner
-            self.buffer = deque(maxlen = self.capacity)
+        if self.buffer is None:
+            self.buffer = deque(maxlen=self.capacity)
             self.stats = {'sample_in': 0, 'sample_out': 0, 'episode_in': 0}
-        while not self.queue.empty():
-            # data flushed from queue to buffer
-            episode_data = self.queue.get()
+        # 处理赢的队列
+        while not self.queue_win.empty():
+            episode_data = self.queue_win.get()
             unpacked_data = self._unpack(episode_data)
+            for d in unpacked_data:
+                d['win'] = True
+            self.buffer.extend(unpacked_data)
+            self.stats['sample_in'] += len(unpacked_data)
+            self.stats['episode_in'] += 1
+        # 处理输的队列
+        while not self.queue_lose.empty():
+            episode_data = self.queue_lose.get()
+            unpacked_data = self._unpack(episode_data)
+            for d in unpacked_data:
+                d['win'] = False
             self.buffer.extend(unpacked_data)
             self.stats['sample_in'] += len(unpacked_data)
             self.stats['episode_in'] += 1
     
-    def sample(self, batch_size): # only called by learner
+    def sample(self, batch_size, win_ratio=0.8):
         self._flush()
         assert len(self.buffer) > 0, "Empty buffer!"
         self.stats['sample_out'] += batch_size
-        if batch_size >= len(self.buffer):
-            samples = self.buffer
-        else:
-            samples = random.sample(self.buffer, batch_size)
-        batch = self._pack(samples)
+
+        win_samples = [x for x in self.buffer if x.get('win', False)]
+        lose_samples = [x for x in self.buffer if not x.get('win', False)]
+
+        win_batch = int(batch_size * win_ratio)
+        lose_batch = batch_size - win_batch
+
+        batch = []
+        if win_samples:
+            batch += random.sample(win_samples, min(win_batch, len(win_samples)))
+        if lose_samples:
+            batch += random.sample(lose_samples, min(lose_batch, len(lose_samples)))
+
+        # 补齐
+        while len(batch) < batch_size and len(self.buffer) > len(batch):
+            batch.append(random.choice(self.buffer))
+
+        batch = self._pack(batch)
         return batch
     
     def size(self): # only called by learner

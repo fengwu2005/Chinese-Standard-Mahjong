@@ -23,13 +23,9 @@ class Actor(Process):
         torch.set_num_threads(1)
     
         self.pretrained_model = CNNModel() # pretrained model
-        if self.config['pretrain_ckpt_path']:
-            model_files = [f for f in os.listdir(self.config['pretrain_ckpt_path']) if f.endswith('.pkl')]
-            if model_files:
-                max_epoch = max([int(f.split('.')[0]) for f in model_files if f.split('.')[0].isdigit()])
-                model_path = os.path.join(self.config['pretrain_ckpt_path'], f"{max_epoch}.pkl")
-                self.pretrained_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
-            else:
+        if self.config['baseline_ckpt']:
+                self.pretrained_model.load_state_dict(torch.load(self.config['baseline_ckpt'], map_location=torch.device('cpu')))
+        else:
                 raise FileNotFoundError("No pre-trained model found in the specified path.")
     
         # connect to model pool
@@ -119,10 +115,14 @@ class Actor(Process):
                 next_obs, rewards, done = env.step(actions)
                 
                 # record rewards
+                #print(rewards)
                 if train_agent_name in rewards:
                     rew = rewards[train_agent_name]
+                    
                     if rew > 20:
-                        rew = 20 + 0.5*(rew-20)
+                        rew = 20 + 0.1*(rew-20)
+                    if rew < -20:
+                        rew = -20 + 0.1*(rew+20)
                     episode_data['reward'].append(rew)
                     # episode_data['reward'].append(rewards[train_agent_name])
                 # else:
@@ -131,6 +131,7 @@ class Actor(Process):
             #print(self.name, 'Episode', episode, 'Model', latest['id'], 'Reward', rewards)
             
             # postprocessing episode data
+            #print(episode_data['reward'])
             if len(episode_data['action']) < len(episode_data['reward']):
                 episode_data['reward'].pop(0)
             obs = np.stack(episode_data['state']['observation'])
@@ -150,14 +151,23 @@ class Actor(Process):
                 advs.append(adv) # GAE
             advs.reverse()
             advantages = np.array(advs, dtype = np.float32)
-            
-            # send samples to replay_buffer
-            self.replay_buffer.push({
-                'state': {
-                    'observation': obs,
-                    'action_mask': mask
-                },
-                'action': actions,
-                'adv': advantages,
-                'target': td_target
-            })
+            if rewards[-1] > 0:
+                self.replay_buffer.push_win({
+                    'state': {
+                        'observation': obs,
+                        'action_mask': mask
+                    },
+                    'action': actions,
+                    'adv': advantages,
+                    'target': td_target,
+                })
+            else:
+                self.replay_buffer.push_lose({
+                    'state': {
+                        'observation': obs,
+                        'action_mask': mask
+                    },
+                    'action': actions,
+                    'adv': advantages,
+                    'target': td_target,
+                })
