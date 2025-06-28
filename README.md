@@ -7,21 +7,20 @@ conda activate mahjong
 pip install -r requirements.txt
 ```
 
-model_origin.py origin model code
-
-model.py the model changed by Peng Yitong
-
-feature_origin.py origin feature extract code
-
-feature.py new feature extract code
-
-pre_train.py and pre_data_process.py is the pre-train code
-
 ## Pretrain
-
-put the data.txt into the folder "pretain/data/"
-
-**you can run pre_train.sh to start pretrain**
+download the pretrain data to ./pretrain/data from 
+https://disk.pku.edu.cn/link/AAC9250B3B77C7450A9A44EC4653992C66
+文件夹名：data
+有效期限：2025-07-28 12:01
+### preprocess the data
 ```bash
-./pre_train.sh
+python pretrain/pre_data_process.py
+```
+### pretrain
+```bash
+python pretrain/pre_train.py
+```
+## RL training
+```bash
+python scripts/train.py #you can change the config in train.py as you want
 ```
