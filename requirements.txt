@@ -1,0 +1,6 @@
+PyMahjongGB
+numpy
+torch
+tqdm
+wandb
+tensorboard
